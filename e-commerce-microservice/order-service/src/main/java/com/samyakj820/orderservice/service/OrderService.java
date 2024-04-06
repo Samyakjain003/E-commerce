@@ -3,6 +3,7 @@ package com.samyakj820.orderservice.service;
 import com.samyakj820.orderservice.dto.InventoryResponse;
 import com.samyakj820.orderservice.dto.OrderLineItemsDto;
 import com.samyakj820.orderservice.dto.OrderRequest;
+import com.samyakj820.orderservice.event.OrderPlacedEvent;
 import com.samyakj820.orderservice.model.Order;
 import com.samyakj820.orderservice.model.OrderLineItems;
 import com.samyakj820.orderservice.repository.OrderRepository;
@@ -11,6 +12,7 @@ import io.micrometer.tracing.Tracer;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -29,6 +31,9 @@ public class OrderService {
 
     @Autowired
     Tracer tracer;
+
+    @Autowired
+    KafkaTemplate<String, OrderPlacedEvent> kafkaTemplate;
 
     public String placeOrder(OrderRequest orderRequest) {
         Order order = new Order();
@@ -57,6 +62,7 @@ public class OrderService {
 
             if (result) {
                 orderRepository.save(order);
+                kafkaTemplate.send("notificationTopic", new OrderPlacedEvent(order.getOrderNumber()));
                 return "Order Placed Successfully!";
             }
             else
