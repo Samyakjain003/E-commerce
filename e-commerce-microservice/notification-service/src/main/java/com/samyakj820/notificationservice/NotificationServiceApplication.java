@@ -13,7 +13,7 @@ public class NotificationServiceApplication {
         SpringApplication.run(NotificationServiceApplication.class, args);
     }
 
-    @KafkaListener(topics = "notificationTopic")
+    @KafkaListener(id = "notificationId", topics = "notificationTopic")
     public void handleNotification(OrderPlacedEvent orderPlacedEvent) {
         // send out notification
 
