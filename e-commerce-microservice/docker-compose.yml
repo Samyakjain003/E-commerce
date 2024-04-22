@@ -1,42 +1,59 @@
 version: '3.7'
 services:
 
-  mysql-order:
-    container_name: mysql-order
-    image: mysql
+  postgres-order:
+    container_name: postgres-order
+    image: postgres
     environment:
-      MYSQL_DATABASE: order-service
-      MYSQL_USER: root
-      MYSQL_PASSWORD: rootpass
-      MYSQL_ROOT_PASSWORD: rootpass
+      POSTGRES_DB: order-service
+      POSTGRES_USER: samyak
+      POSTGRES_PASSWORD: password
+      PGDATA: /data/postgres
     volumes:
-      - ./mysql-order:/var/lib/mysql
+      - ./postgres-order:/data/postgres
     expose:
-      - "3306"
+      - "5431"
     ports:
-      - "3306:3306"
+      - "5431:5431"
+    command: -p 5431
     restart: always
 
-  mysql-product:
-    container_name: mysql-product
-    image: mysql
+  postgres-inventory:
+    container_name: postgres-inventory
+    image: postgres
     environment:
-      MYSQL_DATABASE: product-service
-      MYSQL_USER: root
-      MYSQL_PASSWORD: rootpass
-      MYSQL_ROOT_PASSWORD: rootpass
+      POSTGRES_DB: inventory-service
+      POSTGRES_USER: samyak
+      POSTGRES_PASSWORD: password
+      PGDATA: /data/postgres
     volumes:
-      - ./mysql-product:/var/lib/mysql
+      - ./postgres-inventory:/data/postgres
     expose:
-      - "3307"
+      - "5434"
     ports:
-      - "3307:3307"
+      - "5434:5434"
+    restart: always
+
+  postgres-product:
+    container_name: postgres-product
+    image: postgres
+    environment:
+      POSTGRES_DB: product-service
+      POSTGRES_USER: samyak
+      POSTGRES_PASSWORD: password
+      PGDATA: /data/postgres
+    volumes:
+      - ./postgres-product:/data/postgres
+    expose:
+      - "5433"
+    ports:
+      - "5433:5433"
     restart: always
 
   ## Keycloak Config with Mysql database
   keycloak-mysql:
     container_name: keycloak-mysql
-    image: mysql:5.7
+    image: arm64v8/mysql
     volumes:
       - ./mysql_keycloak_data:/var/lib/mysql
     environment:
@@ -129,7 +146,7 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=docker
     depends_on:
-      - mysql-product
+      - postgres-product
       - discovery-server
       - api-gateway
 
@@ -141,7 +158,7 @@ services:
       - SPRING_PROFILES_ACTIVE=docker
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-order:5431/order-service
     depends_on:
-      - mysql-order
+      - postgres-order
       - broker
       - zipkin
       - discovery-server
